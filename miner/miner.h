@@ -6,11 +6,14 @@
 
 #include <array>
 
+template<typename Data>
 class miner final {
 public:
         miner() = default;
         ~miner() = default;
-        using header_t = std::array<unsigned char, 80>;
 
-        std::size_t do_work(const header_t& header, std::size_t complecety);
+        template<typename Result, typename WorkFunction, typename CheckFucntion>
+        Result do_work(WorkFunction&& work_function, CheckFucntion&& check_function, const Data& data){
+                // todo run parrallel tasks
+        }
 };
