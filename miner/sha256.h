@@ -13,12 +13,12 @@ namespace crypto {
 
                 virtual ~sha256() = default;
                 
-                virtual void update(const unsigned char* data, std::size_t length) {};
+                virtual void update(const unsigned char* data, std::size_t length) = 0;
 
-                virtual void transform(const unsigned char* data) {};
+                virtual void transform(const unsigned char* data) = 0;
 
-                virtual const hash_t& finalize() {};
+                virtual const hash_t& finalize() = 0;
 
-                virtual const hash_t& hash() {};
+                virtual const hash_t& hash() = 0;
         };
 }

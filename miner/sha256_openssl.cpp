@@ -4,7 +4,7 @@
 namespace crypto {
 
         sha256_openssl::sha256_openssl(){
-                
+
         }
 
     void sha256_openssl::update(const unsigned char* data, std::size_t length) {
@@ -16,12 +16,11 @@ namespace crypto {
     }
 
     const sha256::hash_t& sha256_openssl::finalize() {
-        for(auto md: m_hash)
-            SHA256_Final(&md, m_context);
+        SHA256_Final(m_hash.data(), m_context);
         return m_hash;
     }
 
     const sha256::hash_t& sha256_openssl::hash() {
-
+            return m_hash;
     }
 }
