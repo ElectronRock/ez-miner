@@ -6,6 +6,7 @@
 
 #include "sha256.h"
 
+
 struct SHA256state_st;
 
 namespace crypto {
@@ -24,7 +25,7 @@ namespace crypto {
                 virtual const hash_t& hash() override; //getter
         private:
                 SHA256state_st* m_context { nullptr };
-                hash_t m_hash;
+                hash_t m_hash = {0};
         };
 
 }
