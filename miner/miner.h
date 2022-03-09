@@ -13,11 +13,14 @@
 template<typename Data, typename Result, typename WorkFunction, typename CheckFunction>
 class miner final {
 public:
-    miner(const Data& data, WorkFunction&& workFunction, CheckFunction&& checkFunction): m_data(data),
-            m_workFunction(std::move(workFunction)), m_checkFunction(std::move(checkFunction)) {};
-    ~miner() = default;
+    miner(const Data& data, WorkFunction&& workFunction, CheckFunction&& checkFunction)
+        : m_data(data)
+        , m_workFunction(std::move(workFunction))
+        , m_checkFunction(std::move(checkFunction)) {
 
-    std::vector<std::thread> m_pool;
+        };
+
+    ~miner() = default;
 
     enum class workerStatus {
         initial,
@@ -25,11 +28,11 @@ public:
         failure,
         success
     };
+
     struct result {
         int data = 0;
         workerStatus status = workerStatus::initial;
     };
-    std::vector<result> m_result;
 
     auto compute_duration() {
         auto t1 = std::chrono::high_resolution_clock::now();
@@ -60,19 +63,23 @@ public:
         m_pool[index] = [&, this]{payload(m_last_task_id);};
         m_last_task_id++;
     }
+
     void payload(int index) {
-            Result result = m_workFuncion(m_data, index);
-            bool is_correct = m_checkFunction(result);
-            if(is_correct) {
-                m_result[index].data = result;
-                m_result[index].status = workerStatus::success;
-            }
-            else
-                m_result[index].status = workerStatus::failure;
+        Result result = m_workFuncion(m_data, index);
+        bool is_correct = m_checkFunction(result);
+        if(is_correct) {
+            m_result[index].data = result;
+            m_result[index].status = workerStatus::success;
+        } else {
+            m_result[index].status = workerStatus::failure;
         }
+    }
+    
 private:
     int m_last_task_id = 0;
     Data m_data;
     WorkFunction m_workFunction;
     CheckFunction m_checkFunction;
+    std::vector<result> m_result;
+    std::vector<std::thread> m_pool;
 };
