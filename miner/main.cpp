@@ -10,7 +10,7 @@ struct data  {
 
 };
 
-int main() {    
+int main() {
         data data_obj;
 
         miner miner_obj(
