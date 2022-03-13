@@ -10,7 +10,7 @@
 #include <atomic>
 #include <chrono>
 
-template<typename Data, typename Result, typename WorkFunction, typename CheckFunction>
+template<typename Data, typename WorkFunction, typename CheckFunction>
 class miner final {
 public:
     miner(const Data& data, WorkFunction&& workFunction, CheckFunction&& checkFunction)
@@ -41,7 +41,7 @@ public:
         return duration_cast<std::chrono::milliseconds>(t2 - t1);
     }
 
-    Result do_work() {
+    auto do_work() {
         auto ms_int = compute_duration();
         auto thread_count = std::thread::hardware_concurrency();
         m_pool.resize(thread_count);
