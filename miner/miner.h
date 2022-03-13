@@ -72,14 +72,14 @@ private:
 
     auto compute_duration() {
         auto t1 = std::chrono::high_resolution_clock::now();
-        payload(0);
+        payload(0, m_last_task_id);
         auto t2 = std::chrono::high_resolution_clock::now();
         return std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
     }
 
     void add_task(int thread_id) {
         m_result[thread_id].status = workerStatus::inProgress;
-        m_pool[thread_id] = [&, this] { payload(m_last_task_id); };
+        m_pool[thread_id] = std::thread([=, this] { payload(thread_id, m_last_task_id); });
         m_last_task_id++;
     }
 
@@ -87,7 +87,7 @@ private:
         auto result = m_workFunction(m_data, last_task_id);
         bool is_correct = m_checkFunction(result);
         if (is_correct) {
-            m_result[thread_id].data = result;
+            m_result[thread_id].data = last_task_id;
             m_result[thread_id].status = workerStatus::success;
         } else {
             m_result[thread_id].status = workerStatus::failure;
