@@ -9,6 +9,8 @@ struct data  {
 
 };
 
+
+
 int main() {
         data data_obj;
 
