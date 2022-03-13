@@ -17,7 +17,7 @@ template<typename T, std::size_t Size>
 auto compute_hash(const std::array<T, Size>& to_compute) {
     crypto::sha256_openssl context;
     context.update((unsigned char*)to_compute.data(), 80);
-     return context.finalize();
+    return context.finalize();
 };
 
 int main() {

@@ -41,10 +41,10 @@ public:
     ~miner() = default;
 
     auto do_work() {
-        auto ms_int = compute_duration();
         auto thread_count = std::thread::hardware_concurrency();
         m_pool.resize(thread_count);
         m_result.resize(thread_count);
+        auto ms_int = compute_duration();
         while (true) {
             for (int thread_id = 0; thread_id <= m_result.size(); thread_id++) {
                 auto cur_status = m_result[thread_id].status;
