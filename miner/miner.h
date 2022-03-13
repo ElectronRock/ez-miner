@@ -30,13 +30,13 @@ public:
     };
 
     struct result {
-        int data = 0;
+        unsigned data = 0;
         workerStatus status = workerStatus::initial;
     };
 
     auto compute_duration() {
         auto t1 = std::chrono::high_resolution_clock::now();
-        payload(m_workFunction, m_checkFunction, m_data, 0);
+        payload(0);
         auto t2 = std::chrono::high_resolution_clock::now();
         return duration_cast<std::chrono::milliseconds>(t2 - t1);
     }
@@ -65,7 +65,7 @@ public:
     }
 
     void payload(int index) {
-        Result result = m_workFuncion(m_data, index);
+        auto result = m_workFunction(m_data, index);
         bool is_correct = m_checkFunction(result);
         if(is_correct) {
             m_result[index].data = result;
@@ -83,3 +83,6 @@ private:
     std::vector<result> m_result;
     std::vector<std::thread> m_pool;
 };
+
+template<typename Data, typename WorkFunction, typename CheckFunction>
+miner(Data, WorkFunction, CheckFunction)->miner<Data, WorkFunction, CheckFunction>;

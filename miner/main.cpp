@@ -1,7 +1,16 @@
 
 #include <iostream>
 #include <array>
+#include <functional>
+
+#include  "miner.h"
+
+struct data  {
+
+};
 
 int main() {
-        return 0;
+        data data_obj;
+
+        miner(data_obj, []{}, []{});
 }
