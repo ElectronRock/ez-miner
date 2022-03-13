@@ -13,6 +13,25 @@
 template<typename Data, typename WorkFunction, typename CheckFunction>
 class miner final {
 public:
+
+    /*
+    * <Constructor> 
+    *
+    * @param data DTO object, contains previous block-chain header or what ever else; 
+    * 
+    * @param workFunction the function to be used to compute hash, signature:
+    *    hash_t WorkFunction(const Data& data, unsigned task_number);
+    * 
+    * @param checkFunction the function to be used to check weather computed hash suitable to the specified conditions
+    * or not (mean hash complexity), signature: 
+    * bool CheckFunction(const hash_t& hash);
+    * 
+    *  @usage
+    * miner miner_obj(data, 
+    *   [](const data_t&, unsigned task_id){ /// return hash_t{};},
+    *   [](const hash_t){ return true; }
+    * );
+    */ 
     miner(const Data& data, WorkFunction&& workFunction, CheckFunction&& checkFunction)
         : m_data(data)
         , m_workFunction(std::move(workFunction))
@@ -60,7 +79,7 @@ public:
 
     void add_task(int index) {
         m_result[index].status = workerStatus::inProgress;
-        m_pool[index] = [&, this]{payload(m_last_task_id);};
+        m_pool[index] = [&, this]{ payload(m_last_task_id); };
         m_last_task_id++;
     }
 
