@@ -41,19 +41,17 @@ public:
     ~miner() = default;
 
     auto do_work() {
-        auto thread_count = std::thread::hardware_concurrency();
+        auto thread_count = std::jthread::hardware_concurrency();
         m_pool.resize(thread_count);
         m_result.resize(thread_count);
-        auto ms_int = compute_duration();
         while (true) {
-            for (int thread_id = 0; thread_id <= m_result.size(); thread_id++) {
+            for (int thread_id = 0; thread_id < m_result.size(); thread_id++) {
                 auto cur_status = m_result[thread_id].status;
                 if (cur_status == workerStatus::success)
                     return m_result[thread_id].data;
                 if (cur_status == workerStatus::failure || cur_status == workerStatus::initial)
                     add_task(thread_id);
             }
-            std::this_thread::sleep_for((3 * ms_int) / (2 * thread_count));
         }
     }
 
@@ -70,16 +68,10 @@ private:
         workerStatus status = workerStatus::initial;
     };
 
-    auto compute_duration() {
-        auto t1 = std::chrono::high_resolution_clock::now();
-        payload(0, m_last_task_id);
-        auto t2 = std::chrono::high_resolution_clock::now();
-        return std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-    }
 
     void add_task(int thread_id) {
         m_result[thread_id].status = workerStatus::inProgress;
-        m_pool[thread_id] = std::thread([=, this] { payload(thread_id, m_last_task_id); });
+        m_pool[thread_id] = std::jthread([=, this] { payload(thread_id, m_last_task_id); });
         m_last_task_id++;
     }
 
@@ -99,7 +91,7 @@ private:
     WorkFunction m_workFunction;
     CheckFunction m_checkFunction;
     std::vector<result> m_result;
-    std::vector<std::thread> m_pool;
+    std::vector<std::jthread> m_pool;
 };
 
 template<typename Data, typename WorkFunction, typename CheckFunction>

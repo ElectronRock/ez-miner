@@ -7,6 +7,12 @@ namespace crypto {
         m_context = new SHA256state_st;
         SHA256_Init(m_context);
     }
+
+    sha256_openssl::sha256_openssl(const sha256_openssl& rhs){
+        m_context = new SHA256state_st;
+        *m_context = *rhs.m_context;
+    }
+
     sha256_openssl::~sha256_openssl() noexcept {
         delete m_context;
     }
