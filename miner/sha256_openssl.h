@@ -13,6 +13,7 @@ namespace crypto {
     class sha256_openssl final : public sha256 {
     public:
         sha256_openssl();
+        sha256_openssl(const sha256_openssl& rhs);
         virtual ~sha256_openssl();
 
         virtual void update(const unsigned char* data, std::size_t length) override; //update

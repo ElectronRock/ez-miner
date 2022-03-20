@@ -38,9 +38,10 @@ public:
               , m_checkFunction(std::move(checkFunction)) {
     };
 
-    ~miner(){
+    ~miner() {
         for(auto&& thread : m_pool)
-            if(thread.joinable()) thread.join();
+            if(thread.joinable())
+                thread.join();
     }
 
     auto do_work() {
@@ -83,12 +84,11 @@ private:
     Data m_data;
     WorkFunction m_workFunction;
     CheckFunction m_checkFunction;
-
     constexpr static unsigned MaxThreadCount = 64;
     std::atomic<unsigned> m_result;
-    std::vector<std::thread> m_pool;
     std::array<std::atomic_bool, MaxThreadCount> m_active;
     std::atomic_bool m_found;
+    std::vector<std::thread> m_pool;
 };
 
 template<typename Data, typename WorkFunction, typename CheckFunction>
