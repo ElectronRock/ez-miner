@@ -38,68 +38,57 @@ public:
               , m_checkFunction(std::move(checkFunction)) {
     };
 
-    ~miner() = default;
+    ~miner(){
+        for(auto&& thread : m_pool)
+            if(thread.joinable()) thread.join();
+    }
 
     auto do_work() {
         auto thread_count = std::thread::hardware_concurrency();
-        m_pool.resize(thread_count);
-        m_result.resize(thread_count);
-        auto ms_int = compute_duration();
-        while (true) {
-            for (int thread_id = 0; thread_id <= m_result.size(); thread_id++) {
-                auto cur_status = m_result[thread_id].status;
-                if (cur_status == workerStatus::success)
-                    return m_result[thread_id].data;
-                if (cur_status == workerStatus::failure || cur_status == workerStatus::initial)
-                    add_task(thread_id);
-            }
-            std::this_thread::sleep_for((3 * ms_int) / (2 * thread_count));
+        m_pool.reserve(thread_count);
+        for(auto&& active : m_active)
+            active.store(true);
+        auto step = std::numeric_limits<unsigned>::max() / thread_count;
+        m_found = false;
+        for (unsigned thread_id = 0; thread_id < thread_count; ++thread_id) {
+            m_pool.emplace_back([=, this]{ 
+                auto first_nonce = thread_id * step;
+                find(thread_id, first_nonce, first_nonce + step);
+            });
         }
+
+        m_found.wait(false);
+
+        for(auto&& active : m_active)
+            active.store(false, std::memory_order::release);
+        
+        return m_result.load(std::memory_order::acquire);
     }
 
 private:
-    enum class workerStatus {
-        initial,
-        inProgress,
-        failure,
-        success
-    };
 
-    struct result {
-        unsigned data = 0;
-        workerStatus status = workerStatus::initial;
-    };
-
-    auto compute_duration() {
-        auto t1 = std::chrono::high_resolution_clock::now();
-        payload(0, m_last_task_id);
-        auto t2 = std::chrono::high_resolution_clock::now();
-        return std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-    }
-
-    void add_task(int thread_id) {
-        m_result[thread_id].status = workerStatus::inProgress;
-        m_pool[thread_id] = std::thread([=, this] { payload(thread_id, m_last_task_id); });
-        m_last_task_id++;
-    }
-
-    void payload(int thread_id, unsigned last_task_id) {
-        auto result = m_workFunction(m_data, last_task_id);
-        bool is_correct = m_checkFunction(result);
-        if (is_correct) {
-            m_result[thread_id].data = last_task_id;
-            m_result[thread_id].status = workerStatus::success;
-        } else {
-            m_result[thread_id].status = workerStatus::failure;
+    void find(unsigned thread, unsigned first_nonce, unsigned last_nonce){
+        for(unsigned nonce { first_nonce }; nonce < last_nonce && m_active[thread].load(); ++nonce) {
+            auto result = m_workFunction(m_data, nonce);
+            bool is_correct = m_checkFunction(result);
+            if (is_correct) {
+                m_result.store(nonce);
+                m_found = true;
+                m_found.notify_one();
+                break;
+            }
         }
     }
 
-    unsigned m_last_task_id = 0;
     Data m_data;
     WorkFunction m_workFunction;
     CheckFunction m_checkFunction;
-    std::vector<result> m_result;
+
+    constexpr static unsigned MaxThreadCount = 64;
+    std::atomic<unsigned> m_result;
     std::vector<std::thread> m_pool;
+    std::array<std::atomic_bool, MaxThreadCount> m_active;
+    std::atomic_bool m_found;
 };
 
 template<typename Data, typename WorkFunction, typename CheckFunction>
